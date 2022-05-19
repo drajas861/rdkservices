@@ -3758,7 +3758,7 @@ namespace WPEFramework {
             IARM_Bus_CommonAPI_SysModeChange_Param_t *param =
                 (IARM_Bus_CommonAPI_SysModeChange_Param_t *)arg;
 
-            std::string mosde = iarmModeToString(param->newMode);
+            std::string mode = iarmModeToString(param->newMode);
 
 #ifdef HAS_API_POWERSTATE
             if (SystemServices::_instance) {
