@@ -241,8 +241,16 @@ namespace WPEFramework {
 
         static void _powerEventHandler(const char *owner, IARM_EventId_t eventId,
                 void *data, size_t len);
-		static  IARM_Result_t _resetEventHandler(const char *owner, IARM_EventId_t eventId,
+		static  IARM_Result_t _FactoryReset(const char *owner, IARM_EventId_t eventId,
                 void *data, size_t len);
+		static  IARM_Result_t _WareHouseReset(const char *owner, IARM_EventId_t eventId,
+                void *data, size_t len);
+        static  IARM_Result_t _WareHouseClear(const char *owner, IARM_EventId_t eventId,
+                void *data, size_t len);
+        static  IARM_Result_t _ColdFactoryReset(const char *owner, IARM_EventId_t eventId,
+                void *data, size_t len);
+        static  IARM_Result_t _UserFactoryReset(const char *owner, IARM_EventId_t eventId,
+                void *data, size_t len);				
 
 #ifdef ENABLE_THERMAL_PROTECTION
         static void handleThermalLevelChange(IARM_Bus_PWRMgr_EventData_t *param);
@@ -462,11 +470,11 @@ namespace WPEFramework {
                 IARM_CHECK( IARM_Bus_RegisterEventHandler(IARM_BUS_PWRMGR_NAME, IARM_BUS_PWRMGR_EVENT_REBOOTING, _powerEventHandler));
                 IARM_CHECK( IARM_Bus_RegisterEventHandler(IARM_BUS_PWRMGR_NAME, IARM_BUS_PWRMGR_EVENT_NETWORK_STANDBYMODECHANGED, _powerEventHandler));
                 
-				IARM_CHECK( IARM_Bus_RegisterCall(IARM_BUS_PWRMGR_NAME, IARM_BUS_PWRMGR_API_FactoryReset, _resetEventHandler));
-				IARM_CHECK( IARM_Bus_RegisterCall(IARM_BUS_PWRMGR_NAME, IARM_BUS_PWRMGR_API_WareHouseReset, _resetEventHandler));
-				IARM_CHECK( IARM_Bus_RegisterCall(IARM_BUS_PWRMGR_NAME, IARM_BUS_PWRMGR_API_WareHouseClear, _resetEventHandler));
-				IARM_CHECK( IARM_Bus_RegisterCall(IARM_BUS_PWRMGR_NAME, IARM_BUS_PWRMGR_API_ColdFactoryReset, _resetEventHandler));
-				IARM_CHECK( IARM_Bus_RegisterCall(IARM_BUS_PWRMGR_NAME, IARM_BUS_PWRMGR_API_UserFactoryReset, _resetEventHandler));
+				IARM_CHECK( IARM_Bus_RegisterCall(IARM_BUS_PWRMGR_NAME, IARM_BUS_PWRMGR_API_FactoryReset, _FactoryReset));
+				IARM_CHECK( IARM_Bus_RegisterCall(IARM_BUS_PWRMGR_NAME, IARM_BUS_PWRMGR_API_WareHouseReset, _WareHouseReset));
+				IARM_CHECK( IARM_Bus_RegisterCall(IARM_BUS_PWRMGR_NAME, IARM_BUS_PWRMGR_API_WareHouseClear, _WareHouseClear));
+				IARM_CHECK( IARM_Bus_RegisterCall(IARM_BUS_PWRMGR_NAME, IARM_BUS_PWRMGR_API_ColdFactoryReset, _ColdFactoryReset));
+				IARM_CHECK( IARM_Bus_RegisterCall(IARM_BUS_PWRMGR_NAME, IARM_BUS_PWRMGR_API_UserFactoryReset, _UserFactoryReset));
                 
 #ifdef ENABLE_THERMAL_PROTECTION
                 IARM_CHECK( IARM_Bus_RegisterEventHandler(IARM_BUS_PWRMGR_NAME, IARM_BUS_PWRMGR_EVENT_THERMAL_MODECHANGED, _thermMgrEventsHandler));
@@ -3640,7 +3648,112 @@ namespace WPEFramework {
          * @param4[in]  : len
          * @return      : <void>
          */
-        IARM_Result_t _resetEventHandler(const char *owner, IARM_EventId_t eventId,
+		IARM_Result_t _FactoryReset(const char *owner, IARM_EventId_t eventId,
+                void *data, size_t len)
+		{
+			int res = IARM_RESULT_SUCCESS;
+			if (SystemServices::_instance) 
+					{
+						res = SystemServices::_instance->processFactoryReset();
+						//LOG("_FactoryReset returned : %d\r\n", res);
+						fflush(stdout);
+						if (res == 0)
+							res = IARM_RESULT_SUCCESS;
+						else
+							res = IARM_RESULT_IPCCORE_FAIL;
+					}
+			else
+					{
+						LOGERR("SystemServices::_instance is NULL in IARM_BUS_PWRMGR_API_FactoryReset Case.\n");
+					}		
+			return 	res;	
+		}
+		
+		/*IARM_Result_t _WareHouseReset(const char *owner, IARM_EventId_t eventId,
+                void *data, size_t len)
+		{
+			int res = IARM_RESULT_SUCCESS;
+			if (SystemServices::_instance) 
+					{
+						res = SystemServices::_instance->processWHReset();
+						//LOG("_WareHouseReset returned : %d\r\n", res);
+						fflush(stdout);
+						if (res == 0)
+							res = IARM_RESULT_SUCCESS;
+						else
+							res = IARM_RESULT_IPCCORE_FAIL;
+					}
+			else
+					{
+						LOGERR("SystemServices::_instance is NULL in IARM_BUS_PWRMGR_API_WareHouseReset Case.\n");
+					}		
+			return 	res;	
+		}
+		
+		IARM_Result_t _WareHouseClear(const char *owner, IARM_EventId_t eventId,
+                void *data, size_t len)
+		{
+			int res = IARM_RESULT_SUCCESS;
+			if (SystemServices::_instance) 
+					{
+						res = SystemServices::_instance->processWHClear();
+						//LOG("_WareHouseClear returned : %d\r\n", res);
+						fflush(stdout);
+						if (res == 0)
+							res = IARM_RESULT_SUCCESS;
+						else
+							res = IARM_RESULT_IPCCORE_FAIL;
+					}
+			else
+					{
+						LOGERR("SystemServices::_instance is NULL in IARM_BUS_PWRMGR_API_WareHouseClear Case.\n");
+					}		
+			return 	res;	
+		}*/
+		
+		IARM_Result_t _ColdFactoryReset(const char *owner, IARM_EventId_t eventId,
+                void *data, size_t len)
+		{
+			int res = IARM_RESULT_SUCCESS;
+			if (SystemServices::_instance) 
+					{
+						res = SystemServices::_instance->processColdFactoryReset();
+						//LOG("_ColdFactoryReset returned : %d\r\n", res);
+						fflush(stdout);
+						if (res == 0)
+							res = IARM_RESULT_SUCCESS;
+						else
+							res = IARM_RESULT_IPCCORE_FAIL;
+					}
+			else
+					{
+						LOGERR("SystemServices::_instance is NULL in IARM_BUS_PWRMGR_API_ColdFactoryReset Case.\n");
+					}		
+			return 	res;	
+		}
+		
+		IARM_Result_t _UserFactoryReset(const char *owner, IARM_EventId_t eventId,
+                void *data, size_t len)
+		{
+			int res = IARM_RESULT_SUCCESS;
+			if (SystemServices::_instance) 
+					{
+						res = SystemServices::_instance->processUserFactoryReset();
+						//LOG("_UserFactoryReset returned : %d\r\n", res);
+						fflush(stdout);
+						if (res == 0)
+							res = IARM_RESULT_SUCCESS;
+						else
+							res = IARM_RESULT_IPCCORE_FAIL;
+					}
+			else
+					{
+						LOGERR("SystemServices::_instance is NULL in IARM_BUS_PWRMGR_API_UserFactoryReset Case.\n");
+					}		
+			return 	res;	
+		}
+		 
+        /*IARM_Result_t _resetEventHandler(const char *owner, IARM_EventId_t eventId,
                 void *data, size_t len)
 		{
 			int res = IARM_RESULT_SUCCESS;
@@ -3746,7 +3859,7 @@ namespace WPEFramework {
 			}
 			
 			return res;
-		}
+		}*/
 
 #if defined(USE_IARMBUS) || defined(USE_IARM_BUS)
         /***
