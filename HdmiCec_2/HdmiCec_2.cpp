@@ -446,17 +446,18 @@ namespace WPEFramework
 
                // load persistence setting
                loadSettings();
-
+               vector<uint8_t> edidVec({'u','n','k','n','o','w','n' });
                try
                {
                    //TODO(MROLLINS) this is probably per process so we either need to be running in our own process or be carefull no other plugin is calling it
                    device::Manager::Initialize();
                    std::string strVideoPort = device::Host::getInstance().getDefaultVideoPortName();
                    device::VideoOutputPort vPort = device::Host::getInstance().getVideoOutputPort(strVideoPort.c_str());
+                   vector<uint8_t> edidVec2;
                    if (vPort.isDisplayConnected())
                    {
-                       vector<uint8_t> edidVec;
-                       vPort.getDisplay().getEDIDBytes(edidVec);
+                       vPort.getDisplay().getEDIDBytes(edidVec2);
+		       edidVec = edidVec2;//edidVec must be "unknown" unless we successfully get to this line
                        //Set LG vendor id if connected with LG TV
                        if(edidVec.at(8) == 0x1E && edidVec.at(9) == 0x6D)
                        {
